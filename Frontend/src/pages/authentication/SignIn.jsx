@@ -11,10 +11,10 @@ import {
 } from "../../redux/services/authService";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import Footer from "../../components/Footer";
 import NavbarHeader from "../../components/NavbarHeader";
 import AboutBanner from "../../assets/about-banner.jpg";
 import { motion } from "framer-motion";
+import FooterSection from "../../components/FooterSection";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -134,7 +134,7 @@ const SignIn = () => {
           </p>
         </div>
       </div>
-      <Footer />
+      <FooterSection />
     </>
   );
 };

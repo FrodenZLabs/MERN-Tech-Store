@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import Footer from "./Footer";
+import FooterSection from "./FooterSection";
 
 const DashboardLayout = () => {
   const { currentUser } = useSelector((state) => state.authentication);
@@ -29,7 +29,7 @@ const DashboardLayout = () => {
         <div className="p-6">
           <Outlet />
         </div>
-        <Footer />
+        <FooterSection />
       </div>
     </div>
   );

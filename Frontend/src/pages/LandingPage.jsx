@@ -1,7 +1,7 @@
 import AboutUs from "../components/AboutUs";
 import FAQ from "../components/FAQ";
 import FinalCTA from "../components/FinalCTA";
-import Footer from "../components/Footer";
+import FooterSection from "../components/FooterSection";
 import HeroSection from "../components/HeroSection";
 import HowItWorks from "../components/HowItWorks";
 import KeyFeatures from "../components/KeyFeatures";
@@ -19,7 +19,7 @@ const LandingPage = () => {
       <Testimonials />
       <FinalCTA />
       <FAQ />
-      <Footer />
+      <FooterSection />
     </>
   );
 };

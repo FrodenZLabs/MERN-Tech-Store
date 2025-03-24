@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import NavbarHeader from "../components/NavbarHeader";
-import Footer from "../components/Footer";
 import ContactBanner from "../assets/contact-banner.jpg";
+import FooterSection from "../components/FooterSection";
 
 const ContactUsPage = () => {
   const [formData, setFormData] = useState({
@@ -199,7 +199,7 @@ const ContactUsPage = () => {
           </div>
         </div>
       </section>
-      <Footer />
+      <FooterSection />
     </>
   );
 };

@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import NavbarHeader from "../../components/NavbarHeader";
 import { motion } from "framer-motion";
 import AboutBanner from "../../assets/about-banner.jpg";
-import Footer from "../../components/Footer";
+import FooterSection from "../../components/FooterSection";
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -130,7 +130,7 @@ const SignUp = () => {
           </form>
         </div>
       </div>
-      <Footer />
+      <FooterSection />
     </>
   );
 };
