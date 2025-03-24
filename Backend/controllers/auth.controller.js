@@ -69,9 +69,7 @@ export const signin = async (request, response, next) => {
 
     response
       .status(200)
-      .cookie("access_token", token, {
-        httpOnly: true,
-      })
+      .cookie("access_token", token, { httpOnly: true })
       .json({
         success: true,
         message: "User has signed in successfully.",

@@ -35,9 +35,7 @@ export const predictScore = [
       const res = await axios.post(
         `${FLASK_API_URL}/predict_score`,
         userInput,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
 
       const newPrediction = new CreditScore({
@@ -112,7 +110,6 @@ export const dynamicPrice = [
   validation.validatePriceInput,
   async (request, response, next) => {
     try {
-      // Check validation results
       const errors = validationResult(request);
       if (!errors.isEmpty()) {
         return response.status(400).json({ errors: errors.array() });
@@ -128,7 +125,7 @@ export const dynamicPrice = [
 
       // Fetch user's credit risk level
       const creditRisk = await CreditRisk.findOne({ userId: user.id })
-        .sort({ createdAt: -1 }) // Sort by latest
+        .sort({ createdAt: -1 })
         .limit(1); // Get the most recent record
       if (!creditRisk) {
         return next(errorHandler(404, "Credit risk data not found"));
@@ -136,7 +133,7 @@ export const dynamicPrice = [
 
       // Fetch guarantor's credit score
       const creditScore = await CreditScore.findOne({ userId: user.id })
-        .sort({ createdAt: -1 }) // Sort by latest
+        .sort({ createdAt: -1 })
         .limit(1); // Get the most recent record
       if (!creditScore) {
         return next(errorHandler(404, "Guarantor credit score not found"));
@@ -158,19 +155,16 @@ export const dynamicPrice = [
         base_price: product.base_price,
         inventory_stock: product.stock,
         risk_level: riskLevel,
-        income_in_kes: creditRisk.income_in_kes, // Ensure this field exists in user model
-        guarantor_credit_score: creditScore.credit_score,
+        income_in_kes: creditRisk.income_in_kes,
+        uarantor_credit_score: creditScore.credit_score,
         duration_months: request.body.duration_months, // Get duration from request body
       };
 
       const res = await axios.post(
         `${FLASK_API_URL}/dynamic_price`,
         requestData,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
-
       const dynamicPrice = res.data;
       response.status(201).json({
         success: true,
