@@ -1,14 +1,16 @@
-import { Product } from "../models/products.models.js";
+import mongoose from "mongoose";
+import Product from "../models/products.models.js";
 import cloudinary from "../utils/cloudinary.js";
 import { errorHandler } from "../utils/errorHandler.js";
 
 export const addProduct = async (request, response, next) => {
   try {
-    const { name, description, category, base_price, stock } = request.body;
+    const { title, description, category, base_price, stock } = request.body;
 
-    if (!request.user.isAdmin) {
+    if (request.user.role !== "admin") {
       return next(errorHandler(403, "You are not allowed to create a product"));
     }
+
     // Ensure images were uploaded
     if (!request.images || request.images.length === 0) {
       return response.status(400).json({
@@ -18,7 +20,7 @@ export const addProduct = async (request, response, next) => {
     }
 
     const newProduct = new Product({
-      name,
+      title,
       description,
       category,
       base_price,
@@ -40,18 +42,39 @@ export const addProduct = async (request, response, next) => {
 export const updateProduct = async (request, response, next) => {
   try {
     const productId = request.params.id;
-    const isAdmin = request.user.isAdmin;
-    const { name, description, category, base_price, stock, images } =
-      request.body;
+    const { title, description, category, base_price, stock } = request.body;
 
     // Ensure only admins can update products
-    if (!isAdmin) {
+    if (request.user.role !== "admin") {
       return next(errorHandler(403, "You are not allowed to update a product"));
+    }
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return next(errorHandler(400, "Invalid product ID"));
+    }
+
+    // Find the existing product
+    const existingProduct = await Product.findById(productId);
+    if (!existingProduct) {
+      return next(errorHandler(404, "Product not found"));
+    }
+
+    const productUpdateFields = {};
+    if (title) productUpdateFields.title = title;
+    if (description) productUpdateFields.description = description;
+    if (category) productUpdateFields.category = category;
+    if (base_price) productUpdateFields.base_price = base_price;
+    if (stock) productUpdateFields.stock = stock;
+    if (request.files && request.files.length > 0) {
+      productUpdateFields.images = request.images; // Cloudinary image URLs
+    } else {
+      productUpdateFields.images = existingProduct.images; // Keep existing images
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
-      { name, description, category, base_price, stock, images },
+      { $set: productUpdateFields },
       { new: true, runValidators: true }
     );
 
@@ -65,6 +88,7 @@ export const updateProduct = async (request, response, next) => {
       updatedProduct,
     });
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Failed to update product", error));
   }
 };
@@ -73,11 +97,11 @@ export const updateProduct = async (request, response, next) => {
 export const deleteProduct = async (request, response, next) => {
   try {
     const productId = request.params.id;
-    const isAdmin = request.user.isAdmin;
 
-    if (!isAdmin) {
+    if (request.user.role !== "admin") {
       return next(errorHandler(403, "You are not allowed to delete a product"));
     }
+    
     const product = await Product.findById(productId);
     if (!product) {
       return next(errorHandler(404, "Product not found"));
@@ -118,7 +142,7 @@ export const getAllProducts = async (request, response, next) => {
 
     // Search by product name (case-insensitive)
     if (searchTerm) {
-      filter.name = { $regex: searchTerm, $options: "i" };
+      filter.title = { $regex: searchTerm, $options: "i" };
     }
 
     // Filter by stock availability
@@ -153,7 +177,7 @@ export const getAllProducts = async (request, response, next) => {
     const products = await Product.find(filter)
       .sort(sortOption)
       .limit(productLimit);
-      
+
     response.status(200).json({
       success: true,
       count: products.length,

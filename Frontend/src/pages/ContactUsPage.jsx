@@ -1,9 +1,8 @@
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import NavbarHeader from "../components/NavbarHeader";
-import ContactBanner from "../assets/contact-banner.jpg";
-import FooterSection from "../components/FooterSection";
+import ContactBanner from "../assets/images/Landing Page/contact-banner.jpg";
+import FooterSectionComponent from "../components/FooterSectionComponent";
+import NavbarHeaderComponent from "../components/NavbarSectionComponent";
 
 const ContactUsPage = () => {
   const [formData, setFormData] = useState({
@@ -28,7 +27,7 @@ const ContactUsPage = () => {
 
   return (
     <>
-      <NavbarHeader />
+      <NavbarHeaderComponent />
       <section
         className="relative bg-cover bg-center h-[40vh]"
         style={{
@@ -37,26 +36,16 @@ const ContactUsPage = () => {
       >
         <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="relative z-10 flex items-end justify-center h-full pb-[8vh]">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-center text-white max-w-xl"
-          >
+          <div className="text-center text-white max-w-xl">
             <h1 className="text-6xl font-bold mb-4">Contact Us</h1>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       <section id="contact" className="py-16 bg-gray-100">
         <div className="max-w-6xl mx-auto px-4">
           {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-center mb-12"
-          >
+          <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4 text-amber-500">
               Get in Touch
             </h2>
@@ -64,7 +53,7 @@ const ContactUsPage = () => {
               We’d love to hear from you! Feel free to ask any questions or
               provide feedback.
             </p>
-          </motion.div>
+          </div>
 
           {/* Contact Section (Two Columns) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -187,19 +176,18 @@ const ContactUsPage = () => {
                 </div>
 
                 {/* Submit Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
+                <button
                   type="submit"
                   className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md w-full"
                 >
                   Send Message
-                </motion.button>
+                </button>
               </form>
             </div>
           </div>
         </div>
       </section>
-      <FooterSection />
+      <FooterSectionComponent />
     </>
   );
 };

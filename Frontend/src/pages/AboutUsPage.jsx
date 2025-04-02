@@ -1,12 +1,12 @@
-import { motion } from "framer-motion";
-import AboutUs from "../components/AboutUs";
-import NavbarHeader from "../components/NavbarHeader";
-import AboutBanner from "../assets/about-banner.jpg";
+import AboutBanner from "../assets/images/Landing Page/about-banner.jpg";
+import FooterSectionComponent from "../components/FooterSectionComponent";
+import AboutUs from "../components/Landing Page/AboutUs";
+import NavbarHeaderComponent from "../components/NavbarSectionComponent";
 
 const AboutUsPage = () => {
   return (
     <div>
-      <NavbarHeader />
+      <NavbarHeaderComponent />
       {/* Hero Section (Introduction) */}
       <section
         className="relative bg-cover bg-center h-[40vh]"
@@ -16,14 +16,9 @@ const AboutUsPage = () => {
       >
         <div className="absolute inset-0 bg-black opacity-60"></div>
         <div className="relative z-10 flex items-end justify-center h-full pb-[8vh]">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-center text-white max-w-xl"
-          >
+          <div className="text-center text-white max-w-xl">
             <h1 className="text-6xl font-bold mb-4">About Us</h1>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -34,14 +29,9 @@ const AboutUsPage = () => {
         className="h-[50vh] flex items-center bg-gray-50"
       >
         <div className="max-w-5xl mx-auto px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-3xl lg:text-4xl font-bold text-center mb-8"
-          >
+          <h2 className="text-3xl lg:text-4xl font-bold text-center mb-8">
             Our Achievements
-          </motion.h2>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Achievement 1 */}
             <div className="bg-white p-6 rounded-lg shadow-md text-center">
@@ -90,6 +80,7 @@ const AboutUsPage = () => {
           </a>
         </div>
       </section>
+      <FooterSectionComponent />
     </div>
   );
 };

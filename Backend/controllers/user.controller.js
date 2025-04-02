@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import User from "../models/auth.models.js";
 import { Client, Guarantor } from "../models/user.models.js";
 import cloudinary from "../utils/cloudinary.js";
@@ -7,8 +8,8 @@ export const createClient = async (request, response, next) => {
   try {
     // Extract client details from request body
     const {
-      userId,
-      full_name,
+      first_name,
+      last_name,
       id_number,
       phone_no,
       gender,
@@ -34,12 +35,12 @@ export const createClient = async (request, response, next) => {
       });
     }
 
-    const currentUserId = request.user.id;
-    const isAdmin = request.user.isAdmin;
+    const authId = request.user.id;
+    const isAdmin = request.user.role !== "admin";
 
     // Restrict regular users from creating multiple accounts
     if (!isAdmin) {
-      const existingClient = await Client.findOne({ userId: currentUserId });
+      const existingClient = await Client.findOne({ authId });
       if (existingClient) {
         return next(
           errorHandler(403, "You can only create one client account")
@@ -48,7 +49,7 @@ export const createClient = async (request, response, next) => {
     }
 
     // If the user is an admin, allow creating clients for other users
-    const assignedUserId = isAdmin && userId ? userId : currentUserId;
+    const assignedUserId = isAdmin && authId ? authId : currentUserId;
     // Ensure userId is available from authentication middleware
     if (!request.user || !request.user.id) {
       return next(errorHandler(401, "Unauthorized: User ID is missing"));
@@ -66,8 +67,9 @@ export const createClient = async (request, response, next) => {
 
     // Create new client
     const newClient = new Client({
-      userId: assignedUserId,
-      full_name,
+      authId: assignedUserId,
+      first_name,
+      last_name,
       id_number,
       phone_no,
       gender,
@@ -98,7 +100,6 @@ export const createClient = async (request, response, next) => {
       savedClient,
     });
   } catch (error) {
-    console.log(error);
     next(errorHandler(500, `Failed to create a client ${error}`));
   }
 };
@@ -119,6 +120,7 @@ export const getAllClients = async (request, response, next) => {
 export const getClientById = async (request, response, next) => {
   try {
     const clientId = request.params.id;
+
     const client = await Client.findById(clientId);
     if (!client) {
       return next(errorHandler(404, "Client not found"));
@@ -133,11 +135,38 @@ export const getClientById = async (request, response, next) => {
   }
 };
 
+export const getClientByAuthId = async (request, response, next) => {
+  try {
+    const authId = request.params.authId;
+
+    // Validate the ID format
+    if (!mongoose.Types.ObjectId.isValid(authId)) {
+      return next(errorHandler(400, "Invalid user ID format"));
+    }
+
+    const client = await Client.findOne({ authId }).populate(
+      "authId",
+      "username email"
+    );
+    if (!client) {
+      return next(errorHandler(404, "Client not found for auth id."));
+    }
+
+    response.status(200).json({
+      success: true,
+      client,
+    });
+  } catch (error) {
+    console.log(error);
+    next(errorHandler(500, "Failed to fetch client by User ID", error));
+  }
+};
+
 export const updateClient = async (request, response, next) => {
   try {
-    const clientId = request.params.id;
     const {
-      full_name,
+      first_name,
+      last_name,
       id_number,
       phone_no,
       gender,
@@ -158,21 +187,16 @@ export const updateClient = async (request, response, next) => {
       county,
     } = request.body;
 
+    const authId = request.user.id;
+
     // Find the client by ID
-    const client = await Client.findById(clientId);
+    const client = await Client.findById(authId);
     if (!client) {
       return next(errorHandler(404, "Client not found"));
     }
 
-    // Ensure user making the request is the owner of the client record
-    if (client.userId.toString() !== request.user.id) {
-      return next(
-        errorHandler(403, "Unauthorized: You can only update your own account")
-      );
-    }
-
     const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
+      authId,
       {
         full_name,
         id_number,
@@ -213,22 +237,20 @@ export const updateClient = async (request, response, next) => {
 
 export const deleteClient = async (request, response, next) => {
   try {
-    const clientId = request.params.id;
-    const client = await Client.findById(clientId);
+    const authId = request.user.id;
+    const client = await Client.findById(authId);
 
     if (!client) {
-      return next(errorHandler(404, "Patient not found"));
+      return next(errorHandler(404, "Client not found"));
     }
 
-    // Retrieve the user_id from the client document
-    const userId = client.userId;
-    const deletedClient = await Client.findByIdAndDelete(clientId);
+    const deletedClient = await Client.findByIdAndDelete(authId);
     if (!deletedClient) {
       return next(errorHandler(404, "Client not found"));
     }
 
     // Delete the associated user
-    const deletedUser = await User.findByIdAndDelete(userId);
+    const deletedUser = await User.findByIdAndDelete(authId);
     if (!deletedUser) {
       return next(errorHandler(404, "Associated user with ID not found."));
     }
@@ -245,7 +267,6 @@ export const deleteClient = async (request, response, next) => {
 export const createGuarantor = async (request, response, next) => {
   try {
     const {
-      userId,
       full_name,
       phone_no,
       id_number,
@@ -258,12 +279,12 @@ export const createGuarantor = async (request, response, next) => {
       relationship_to_student,
     } = request.body;
 
-    const currentUserId = request.user.id;
-    const isAdmin = request.user.isAdmin;
+    const authId = request.user.id;
+    const isAdmin = request.user.role !== "admin";
 
     // Restrict regular users from creating multiple accounts
     if (!isAdmin) {
-      const existingClient = await Guarantor.findOne({ userId: currentUserId });
+      const existingClient = await Guarantor.findOne({ authId });
       if (existingClient) {
         return next(
           errorHandler(403, "You can only create one client account")
@@ -271,12 +292,6 @@ export const createGuarantor = async (request, response, next) => {
       }
     }
 
-    // If the user is an admin, allow creating clients for other users
-    const assignedUserId = isAdmin && userId ? userId : currentUserId;
-    // Ensure userId is available from authentication middleware
-    if (!request.user || !request.user.id) {
-      return next(errorHandler(401, "Unauthorized: User ID is missing"));
-    }
     const existingUser = await Guarantor.findOne({
       $or: [{ id_number }, { phone_no }, { kra_pin }],
     });
@@ -289,7 +304,7 @@ export const createGuarantor = async (request, response, next) => {
 
     // Create new guarantor
     const newGuarantor = new Guarantor({
-      userId: assignedUserId,
+      authId,
       full_name,
       phone_no,
       id_number,
@@ -312,6 +327,7 @@ export const createGuarantor = async (request, response, next) => {
       savedGuarantor,
     });
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Failed to create guarantor", error));
   }
 };

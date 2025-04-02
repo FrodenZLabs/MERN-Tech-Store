@@ -1,17 +1,17 @@
-import AboutUs from "../components/AboutUs";
-import FAQ from "../components/FAQ";
-import FinalCTA from "../components/FinalCTA";
-import FooterSection from "../components/FooterSection";
-import HeroSection from "../components/HeroSection";
-import HowItWorks from "../components/HowItWorks";
-import KeyFeatures from "../components/KeyFeatures";
-import NavbarHeader from "../components/NavbarHeader";
-import Testimonials from "../components/Testimonials";
+import FooterSectionComponent from "../components/FooterSectionComponent";
+import AboutUs from "../components/Landing Page/AboutUs";
+import FAQ from "../components/Landing Page/FAQ";
+import FinalCTA from "../components/Landing Page/FinalCTA";
+import HeroSection from "../components/Landing Page/HeroSection";
+import HowItWorks from "../components/Landing Page/HowItWorks";
+import KeyFeatures from "../components/Landing Page/KeyFeatures";
+import Testimonials from "../components/Landing Page/Testimonials";
+import NavbarHeaderComponent from "../components/NavbarSectionComponent";
 
 const LandingPage = () => {
   return (
     <>
-      <NavbarHeader />
+      <NavbarHeaderComponent />
       <HeroSection />
       <HowItWorks />
       <KeyFeatures />
@@ -19,7 +19,7 @@ const LandingPage = () => {
       <Testimonials />
       <FinalCTA />
       <FAQ />
-      <FooterSection />
+      <FooterSectionComponent />
     </>
   );
 };

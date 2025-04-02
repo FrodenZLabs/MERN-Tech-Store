@@ -7,14 +7,12 @@ import predictionRoutes from "./routes/prediction.route.js";
 import authRoutes from "./routes/auth.route.js";
 import cookieParser from "cookie-parser";
 import productRoutes from "./routes/product.route.js";
-import ClientRoutes from "./routes/user.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import userRoutes from "./routes/user.route.js";
+import cartRoutes from "./routes/cart.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 
 const app = express();
-app.use(
-  "/api/payments/webhook",
-  express.raw({ type: "application/json" }) // Stripe requires raw body
-);
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -46,9 +44,11 @@ app.listen(PORT, () => {
 
 app.use("/api/prediction", predictionRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/client", ClientRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 
 // Middleware
 app.use((error, request, response, next) => {

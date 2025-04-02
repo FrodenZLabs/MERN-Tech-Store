@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import validation from "../utils/validation.js";
 import { validationResult } from "express-validator";
 import { CreditRisk, CreditScore } from "../models/prediction.models.js";
-import { Product } from "../models/products.models.js";
+import Product from "../models/products.models.js";
 import { errorHandler } from "../utils/errorHandler.js";
 dotenv.config();
 
@@ -19,17 +19,16 @@ export const predictScore = [
         return response.status(400).json({ errors: errors.array() });
       }
       const userInput = request.body;
-      const currentUserId = request.user.id;
+      const authId = request.user.id;
 
       // Check if the user already has a prediction
       const existingPrediction = await CreditScore.findOne({
-        userId: currentUserId,
+        authId,
       });
       if (existingPrediction) {
-        return response.status(400).json({
-          success: false,
-          message: "You have already made a credit score prediction.",
-        });
+        return next(
+          errorHandler(400, "You have already made a credit score prediction.")
+        );
       }
 
       const res = await axios.post(
@@ -39,14 +38,15 @@ export const predictScore = [
       );
 
       const newPrediction = new CreditScore({
-        userId: currentUserId,
+        authId,
         ...userInput,
         credit_score: res.data["Credit Score Prediction"][0],
       });
 
       // Save the prediction to the database
       const savedPrediction = await newPrediction.save();
-      response.json({
+
+      response.status(201).json({
         success: true,
         savedPrediction,
         message: "Credit Score prediction successful and stored",
@@ -68,11 +68,11 @@ export const predictRisk = [
       }
 
       const userInput = request.body;
-      const currentUserId = request.user.id;
+      const authId = request.user.id;
 
       // Check if the user already has a risk prediction
       const existingPrediction = await CreditRisk.findOne({
-        userId: currentUserId,
+        authId,
       });
       if (existingPrediction) {
         return response.status(400).json({
@@ -86,7 +86,7 @@ export const predictRisk = [
       });
 
       const newPrediction = new CreditRisk({
-        userId: currentUserId,
+        authId,
         ...userInput,
         risk_score: res.data["Credit Risk Prediction"][0],
       });
@@ -116,7 +116,7 @@ export const dynamicPrice = [
       }
 
       const { productId } = request.params;
-      const user = request.user;
+      const authId = request.user.id;
 
       const product = await Product.findById(productId);
       if (!product) {
@@ -124,7 +124,7 @@ export const dynamicPrice = [
       }
 
       // Fetch user's credit risk level
-      const creditRisk = await CreditRisk.findOne({ userId: user.id })
+      const creditRisk = await CreditRisk.findOne({ authId })
         .sort({ createdAt: -1 })
         .limit(1); // Get the most recent record
       if (!creditRisk) {
@@ -132,7 +132,7 @@ export const dynamicPrice = [
       }
 
       // Fetch guarantor's credit score
-      const creditScore = await CreditScore.findOne({ userId: user.id })
+      const creditScore = await CreditScore.findOne({ authId })
         .sort({ createdAt: -1 })
         .limit(1); // Get the most recent record
       if (!creditScore) {
@@ -156,7 +156,7 @@ export const dynamicPrice = [
         inventory_stock: product.stock,
         risk_level: riskLevel,
         income_in_kes: creditRisk.income_in_kes,
-        uarantor_credit_score: creditScore.credit_score,
+        guarantor_credit_score: creditScore.credit_score,
         duration_months: request.body.duration_months, // Get duration from request body
       };
 
@@ -172,7 +172,7 @@ export const dynamicPrice = [
         dynamicPrice,
       });
     } catch (error) {
-      next(error);
+      next(errorHandler(500, error));
     }
   },
 ];
@@ -180,10 +180,10 @@ export const dynamicPrice = [
 // Fetch user's credit prediction status
 export const getUserPrediction = async (request, response, next) => {
   try {
-    const userId = request.params.id;
+    const authId = request.params.id;
 
     // Find prediction based on the logged-in user's ID
-    const prediction = await CreditRisk.findOne({ userId: userId });
+    const prediction = await CreditRisk.findOne({ authId });
 
     if (!prediction) {
       return next(errorHandler(404, "Prediction not found!"));

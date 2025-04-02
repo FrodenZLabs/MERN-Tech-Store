@@ -7,6 +7,7 @@ import {
   deleteGuarantor,
   getAllClients,
   getAllGuarantors,
+  getClientByAuthId,
   getClientById,
   getGuarantorById,
   updateClient,
@@ -20,6 +21,7 @@ const router = express.Router();
 router.get("/", verifyToken, getAllClients);
 router.get("/get_guarantors", verifyToken, getAllGuarantors);
 router.get("/:id", verifyToken, getClientById);
+router.get("/get_client/:authId", verifyToken, getClientByAuthId);
 router.get("/get_guarantor/:id", verifyToken, getGuarantorById);
 router.post(
   "/new_client",

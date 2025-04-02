@@ -1,157 +1,135 @@
 import Payment from "../models/payment.models.js";
-import { Product } from "../models/products.models.js";
+import Product from "../models/products.models.js";
 import { errorHandler } from "../utils/errorHandler.js";
 import stripe from "../utils/stripe.js";
-import dotenv from "dotenv";
-dotenv.config();
 
 export const createPayment = async (request, response, next) => {
   try {
-    const { user_id, product_id, payment_amount } = request.body;
+    const { items, monthlyInstallment, total_price } = request.body;
+    const authId = request.user.id;
 
     // Validate input fields
-    if (!user_id || !product_id || !payment_amount) {
+    if (!items || !total_price) {
       return next(errorHandler(400, "All fields are required."));
     }
-    if (isNaN(payment_amount) || payment_amount <= 0) {
-      return next(
-        errorHandler(400, "Payment amount must be a positive number.")
+
+    if (isNaN(total_price) || total_price <= 0) {
+      return next(errorHandler(400, "Total price must be a positive number."));
+    }
+
+    // Validate each item in the cart
+    for (const item of items) {
+      const { productId, quantity, price, repayment_plan } = item;
+
+      if (!productId || !quantity || !price || !repayment_plan) {
+        return next(errorHandler(400, "Invalid cart item data."));
+      }
+
+      if (isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
+        return next(
+          errorHandler(400, "Invalid quantity or price for a cart item.")
+        );
+      }
+
+      if (![3, 6, 9, 12].includes(repayment_plan)) {
+        return next(
+          errorHandler(400, `Invalid repayment plan: ${repayment_plan}`)
+        );
+      }
+
+      // Verify product exists
+      const product = await Product.findById(productId);
+      if (!product) {
+        return next(errorHandler(404, `Product ${productId} not found.`));
+      }
+
+      if (product.stock < item.quantity) {
+        return next(
+          errorHandler(400, `Insufficient stock for product: ${product.title}`)
+        );
+      }
+    }
+
+    // Deduct stock levels for all products
+    for (const item of items) {
+      const product = await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: -item.quantity } }, // Deduct stock based on quantity
+        { new: true } // Return the updated product document
       );
+
+      if (!product || product.stock < 0) {
+        return next(errorHandler(400, "Failed to update stock levels."));
+      }
     }
 
-    // Get the product price
-    const product = await Product.findById(product_id);
-    if (!product) return next(errorHandler(404, "Product not found"));
+    // Convert total price to cents for Stripe
+    const totalAmountInCents = Math.round(monthlyInstallment * 100);
 
-    // Check if user already has an active payment plan
-    let payment = await Payment.findOne({ user_id, product_id });
-
-    if (!payment) {
-      // If no existing plan, create a new one
-      payment = new Payment({
-        user_id,
-        product_id,
-        total_price: product.base_price,
-        remaining_balance: product.base_price, // Initially, full price is due
-        payments: [],
-        payment_status: "pending",
-        payment_amount, // Ensure payment_amount is included at the root level
-        payment_date: new Date(), // Ensure payment_date is set
+    // Create a payment intent with Stripe
+    let paymentIntent;
+    try {
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: totalAmountInCents, // Stripe works in cents
+        currency: "kes", // Use "usd" if "kes" is not supported
+        metadata: { authId },
       });
+    } catch (stripeError) {
+      console.error("Stripe payment intent creation failed:", stripeError);
+      return next(errorHandler(500, "Failed to create Stripe payment intent."));
     }
 
-    // Check if the amount is valid
-    if (payment_amount > payment.remaining_balance) {
-      return next(errorHandler(400, "Payment exceeds remaining balance"));
-    }
-
-    // Convert payment amount to cents (Fix applied here)
-    const amountInCents = Math.round(payment_amount * 100);
-
-    // Create a payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountInCents, // Stripe works in cents
-      currency: "kes",
-      metadata: { user_id, product_id },
+    // Prepare payment data for saving in the database
+    const paymentItems = items.map((item) => {
+      const totalPriceForItem = item.price * item.quantity; // Total price for the item
+      return {
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        repayment_plan: item.repayment_plan, // Include repayment plan
+        total_price: totalPriceForItem, // Total price for the item
+        remaining_balance: totalPriceForItem - monthlyInstallment, // Deduct first installment
+      };
     });
 
-    // Add the payment entry to the history
-    payment.payments.push({
-      amount: payment_amount,
-      date: new Date(),
-      status: "completed",
-      transaction_id: paymentIntent.id,
-    });
-
-    // Deduct from the remaining balance
-    payment.remaining_balance -= payment_amount;
-    payment.payment_status = payment.remaining_balance > 0 ? "pending" : "paid";
-    payment.payment_date = new Date();
-
-    // Check if fully paid
-    if (payment.remaining_balance <= 0) {
-      payment.payment_status = "paid"; // Mark as fully paid
-    }
-
-    // Save updated payment record
-    await payment.save();
-
-    console.log(
-      `✅ Payment of ${payment_amount} KES recorded for User ${user_id}`
+    // Calculate overall totals
+    const totalRemainingBalance = paymentItems.reduce(
+      (sum, item) => sum + item.remaining_balance,
+      0
     );
+
+    // Determine payment status
+    const paymentStatus =
+      totalRemainingBalance === 0 ? "fully_paid" : "partially_paid";
+
+    // Create a new payment record
+    const payment = new Payment({
+      authId,
+      items: paymentItems,
+      total_price,
+      remaining_balance: totalRemainingBalance, // Remaining balance after first installment
+      payment_status: paymentStatus,
+      payments: [
+        {
+          amount: monthlyInstallment, // First installment
+          date: new Date(),
+          status: "completed",
+          transaction_id: paymentIntent.id,
+        },
+      ],
+    });
+
+    // Save the payment record
+    await payment.save();
 
     response.status(201).json({
       success: true,
       clientSecret: paymentIntent.client_secret,
-      message: "Payment successful and recorded.",
+      message: "First installment recorded successfully.",
+      remaining_balance: totalRemainingBalance,
     });
   } catch (error) {
     console.error("Error processing payment:", error);
     next(errorHandler(500, "Error processing payment."));
-  }
-};
-
-export const stripeWebhook = async (request, response, next) => {
-  try {
-    const sig = request.headers["stripe-signature"];
-
-    let event;
-    try {
-      // Verify the Stripe event
-      event = stripe.webhooks.constructEvent(
-        request.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-    } catch (err) {
-      console.error("Webhook signature verification failed:", err.message);
-      return next(errorHandler(400, "Webhook error: Invalid signature"));
-    }
-
-    // Handle successful payment
-    if (event.type === "payment_intent.succeeded") {
-      const paymentIntent = event.data.object;
-      const { user_id, product_id } = paymentIntent.metadata;
-      const amountPaid = paymentIntent.amount / 100; // Convert from cents to KES
-
-      // Find the existing payment record
-      let payment = await Payment.findOne({ user_id, product_id });
-
-      if (!payment) {
-        return next(errorHandler(404, "Payment record not found"));
-      }
-
-      // Add the payment entry to the history
-      payment.payments.push({
-        amount: amountPaid,
-        date: new Date(),
-        status: "completed",
-        transaction_id: paymentIntent.id,
-      });
-
-      // Deduct from the remaining balance
-      payment.remaining_balance -= amountPaid;
-
-      // Check if fully paid
-      if (payment.remaining_balance <= 0) {
-        payment.payment_status = "paid"; // Mark as fully paid
-      }
-
-      // Save updated payment record
-      await payment.save();
-
-      console.log(
-        `✅ Payment of ${amountPaid} KES recorded for User ${user_id}`
-      );
-
-      return response
-        .status(200)
-        .json({ success: true, message: "Payment recorded successfully" });
-    }
-
-    response.status(200).json({ success: true });
-  } catch (error) {
-    console.error("Webhook handling error:", error);
-    next(errorHandler(500, "Error handling webhook"));
   }
 };

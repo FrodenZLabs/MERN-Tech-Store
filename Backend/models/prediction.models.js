@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const creditRiskSchema = new mongoose.Schema(
   {
-    userId: {
+    authId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Auth",
       required: true,
     },
     age: { type: Number, required: true },
@@ -48,9 +48,9 @@ const creditRiskSchema = new mongoose.Schema(
 
 const creditScoreSchema = new mongoose.Schema(
   {
-    userId: {
+    authId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Auth",
       required: true,
     },
     utility_bill_payment: {

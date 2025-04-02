@@ -21,7 +21,13 @@ router.post(
   uploadMultiple,
   addProduct
 );
-router.put("/update_product/:id", verifyToken, updateProduct);
+router.put(
+  "/update_product/:id",
+  verifyToken,
+  upload.array("images", 6),
+  uploadMultiple,
+  updateProduct
+);
 router.delete("/:id", verifyToken, deleteProduct);
 
 export default router;

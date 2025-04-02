@@ -6,7 +6,7 @@ import { Client, Guarantor } from "../models/user.models.js";
 
 export const signup = async (request, response, next) => {
   try {
-    const { username, email, password, isAdmin } = request.body;
+    const { username, email, password } = request.body;
 
     if (!username || !email || !password) {
       next(errorHandler(400, "All fields are required."));
@@ -30,7 +30,6 @@ export const signup = async (request, response, next) => {
       username,
       email,
       password: hashedPassword,
-      isAdmin: isAdmin || false,
     });
 
     const savedUser = await newUser.save();
@@ -58,11 +57,16 @@ export const signin = async (request, response, next) => {
     }
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) {
-      return next(errorHandler(400, "Invalid password"));
+      return next(
+        errorHandler(400, "Invalid password. The password is incorrect.")
+      );
     }
     const token = jwt.sign(
-      { id: validUser._id, isAdmin: validUser.isAdmin },
-      process.env.JWT_SECRET
+      { id: validUser._id, role: validUser.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
     );
 
     const { password: pass, ...rest } = validUser._doc;
@@ -82,15 +86,10 @@ export const signin = async (request, response, next) => {
 
 export const signout = (request, response, next) => {
   try {
-    response
-      .clearCookie("access_token", {
-        httpOnly: true,
-      })
-      .status(200)
-      .json({
-        success: true,
-        message: "User has been signed out successfully.",
-      });
+    response.clearCookie("access_token").status(200).json({
+      success: true,
+      message: "User has been signed out successfully.",
+    });
   } catch (error) {
     next(errorHandler(500, "Error signing out."));
   }
@@ -99,9 +98,7 @@ export const signout = (request, response, next) => {
 // Get all users
 export const getAllUsers = async (request, response, next) => {
   try {
-    const isAdmin = request.user.isAdmin;
-
-    if (!isAdmin) {
+    if (request.user.role !== "admin") {
       return next(errorHandler(403, "You are not allowed to view all users"));
     }
 

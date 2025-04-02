@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    name: {
+    title: {
       type: String,
       required: true,
     },
@@ -12,6 +12,7 @@ const productSchema = new mongoose.Schema(
     },
     category: {
       type: String,
+      enum: ["desktop", "notebook", "phone", "tablet"],
       required: true,
     },
     base_price: {
@@ -30,4 +31,6 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Product = mongoose.model("Product", productSchema);
+const Product = mongoose.model("Product", productSchema);
+
+export default Product;

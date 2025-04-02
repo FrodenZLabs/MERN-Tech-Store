@@ -2,24 +2,28 @@ import mongoose from "mongoose";
 
 const clientSchema = new mongoose.Schema(
   {
-    userId: {
+    authId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Auth",
       required: true,
     },
 
     // Personal Information
-    full_name: {
+    first_name: {
       type: String,
-      required: true,
+      required: false, // Optional field
+    },
+    last_name: {
+      type: String,
+      required: false, // Optional field
     },
     id_number: {
-      type: Number,
+      type: String,
       required: true,
       unique: true,
     },
     phone_no: {
-      type: Number,
+      type: String,
       required: true,
       unique: true,
     },
@@ -33,9 +37,7 @@ const clientSchema = new mongoose.Schema(
     },
     image: {
       type: String, // URL or file path to the profile image
-      required: false,
-      default:
-        "https://imgs.search.brave.com/gV6Xy99WsNTWpgT2KUNxopKhP45u8QMrrL2DGi5HYxg/rs:fit:500:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzE1Lzg0LzQz/LzM2MF9GXzIxNTg0/NDMyNV90dFg5WWlJ/SXllYVI3TmU2RWFM/TGpNQW15NEd2UEM2/OS5qcGc",
+      required: true,
     },
     id_image: {
       type: String, // URL or file path to the ID image
@@ -100,24 +102,28 @@ const clientSchema = new mongoose.Schema(
 
 const guarantorSchema = new mongoose.Schema(
   {
-    userId: {
+    authId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Auth",
       required: true,
     },
 
     // Guarantor Personal Details
-    full_name: {
+    firstName: {
       type: String,
-      required: true,
+      required: false,
+    },
+    lastName: {
+      type: String,
+      required: false,
     },
     phone_no: {
-      type: Number,
+      type: String,
       required: true,
       unique: true,
     },
     id_number: {
-      type: Number,
+      type: String,
       required: true,
       unique: true,
     },
