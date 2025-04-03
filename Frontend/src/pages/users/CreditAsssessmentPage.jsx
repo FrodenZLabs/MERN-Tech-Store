@@ -19,10 +19,8 @@ import {
   setPersonalData,
   setResidenceData,
 } from "../../redux/reducers/formSlice";
-import FooterSectionComponent from "../../components/FooterSectionComponent";
-import AboutBanner from "../../assets/images/Landing Page/about-banner.jpg";
-import NavbarHeaderComponent from "../../components/NavbarSectionComponent";
 import { Button } from "flowbite-react";
+import { HashLoader } from "react-spinners";
 
 const CreditAssessmentPage = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -104,6 +102,13 @@ const CreditAssessmentPage = () => {
   return (
     <div className="py-3 mt-5">
       <div className="max-w-6xl mx-auto">
+        {/* Full-screen loader */}
+        {loading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
+            <HashLoader color="#ffcb00" size={200} />
+          </div>
+        )}
+
         <h1 className="text-center text-3xl">
           Please fill in the following form to determine your credit worthiness.
         </h1>

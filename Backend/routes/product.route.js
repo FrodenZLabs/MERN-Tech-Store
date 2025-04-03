@@ -9,6 +9,7 @@ import {
 import { verifyToken } from "../utils/verifyUser.js";
 import upload from "../utils/multer.js";
 import { uploadMultiple } from "../utils/uploadImage.js";
+import { verifyAdmin } from "../utils/verifyAdmin.js";
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.get("/:id", getProductByID);
 router.post(
   "/add_product",
   verifyToken,
+  verifyAdmin,
   upload.array("images", 6),
   uploadMultiple,
   addProduct
@@ -24,10 +26,11 @@ router.post(
 router.put(
   "/update_product/:id",
   verifyToken,
+  verifyAdmin,
   upload.array("images", 6),
   uploadMultiple,
   updateProduct
 );
-router.delete("/:id", verifyToken, deleteProduct);
+router.delete("/:id", verifyToken, verifyAdmin, deleteProduct);
 
 export default router;

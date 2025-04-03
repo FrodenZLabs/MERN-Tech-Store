@@ -3,6 +3,7 @@ import User from "../models/auth.models.js";
 import { Client, Guarantor } from "../models/user.models.js";
 import cloudinary from "../utils/cloudinary.js";
 import { errorHandler } from "../utils/errorHandler.js";
+import Auth from "../models/auth.models.js";
 
 export const createClient = async (request, response, next) => {
   try {
@@ -35,10 +36,11 @@ export const createClient = async (request, response, next) => {
       });
     }
 
+    // Get the authenticated user's ID
     const authId = request.user.id;
-    const isAdmin = request.user.role !== "admin";
 
     // Restrict regular users from creating multiple accounts
+    const isAdmin = request.user.role === "admin";
     if (!isAdmin) {
       const existingClient = await Client.findOne({ authId });
       if (existingClient) {
@@ -48,8 +50,8 @@ export const createClient = async (request, response, next) => {
       }
     }
 
-    // If the user is an admin, allow creating clients for other users
-    const assignedUserId = isAdmin && authId ? authId : currentUserId;
+    // Assign the correct userId based on role
+    const assignedUserId = isAdmin ? request.body.authId || authId : authId;
     // Ensure userId is available from authentication middleware
     if (!request.user || !request.user.id) {
       return next(errorHandler(401, "Unauthorized: User ID is missing"));
@@ -93,6 +95,9 @@ export const createClient = async (request, response, next) => {
     // Save to database
     const savedClient = await newClient.save();
 
+    // Link the client to the Auth model by updating the `client` field
+    await Auth.findByIdAndUpdate(authId, { clientId: savedClient._id });
+
     // Respond with success message
     response.status(201).json({
       success: true,
@@ -106,7 +111,8 @@ export const createClient = async (request, response, next) => {
 
 export const getAllClients = async (request, response, next) => {
   try {
-    const clients = await Client.find();
+    const clients = await Client.find().populate("authId", "username email");
+
     response.status(200).json({
       success: true,
       count: clients.length,
@@ -320,6 +326,9 @@ export const createGuarantor = async (request, response, next) => {
     // Save to database
     const savedGuarantor = await newGuarantor.save();
 
+    // Link the client to the Auth model by updating the `guarantor` field
+    await Auth.findByIdAndUpdate(authId, { guarantorId: savedGuarantor._id });
+
     // Respond with success message
     response.status(201).json({
       success: true,
@@ -334,7 +343,11 @@ export const createGuarantor = async (request, response, next) => {
 
 export const getAllGuarantors = async (request, response, next) => {
   try {
-    const guarantor = await Guarantor.find();
+    const guarantor = await Guarantor.find().populate(
+      "authId",
+      "username email"
+    );
+
     response.status(200).json({
       success: true,
       count: guarantor.length,
@@ -348,7 +361,21 @@ export const getAllGuarantors = async (request, response, next) => {
 export const getGuarantorById = async (request, response, next) => {
   try {
     const guarantorId = request.params.id;
-    const guarantor = await Guarantor.findById(guarantorId);
+    const guarantor = await Guarantor.findById(guarantorId)
+      .populate({
+        path: "authId",
+        select: "username email role clientId",
+        populate: [
+          {
+            path: "clientId",
+            model: "Client",
+            select:
+              "first_name last_name id_number phone_no gender marital_status image id_image date_of_birth",
+          },
+        ],
+      })
+      .lean();
+
     if (!guarantor) {
       return next(errorHandler(404, "Guarantor not found"));
     }

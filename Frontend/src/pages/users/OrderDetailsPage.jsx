@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { RingLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 import { Button } from "flowbite-react";
 import { fetchOrdersByID } from "../../services/orderService";
 
@@ -34,7 +34,7 @@ const OrderDetailsPage = () => {
       {/* Full-screen loader */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
-          <RingLoader color="#4A90E2" size={100} />
+          <HashLoader color="#ffcb00" size={200} />
         </div>
       )}
 
@@ -48,21 +48,40 @@ const OrderDetailsPage = () => {
           <div className="border-b pb-4 mb-6">
             <h2 className="text-xl font-semibold mb-2">Order #{order._id}</h2>
             <p className="text-sm text-gray-500">
-              Placed on: {new Date(order.createdAt).toLocaleDateString()}
+              Placed on:{" "}
+              {new Date(order.createdAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
             <p className="text-sm text-gray-500">
-              Total Amount: ${order.totalAmount.toFixed(2)}
+              Total Amount: Kshs.{" "}
+              {order.totalAmount.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </p>
             <p className="text-sm text-gray-500">
               Payment Status: {order.paymentStatus}
+            </p>
+            <p className="text-sm text-gray-500">
+              Remaining Balance: Kshs.{" "}
+              {order.remainingBalance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+            <p className="text-sm text-gray-500">
+              Order Status: {order.status}
             </p>
           </div>
 
           {/* User Details */}
           <div className="border-b pb-4 mb-6">
             <h3 className="font-semibold mb-2">User Information</h3>
-            <p>Name: {order.userId.username || "N/A"}</p>
-            <p>Email: {order.userId.email || "N/A"}</p>
+            <p>Name: {order.authId?.username || "N/A"}</p>
+            <p>Email: {order.authId?.email || "N/A"}</p>
           </div>
 
           {/* Order Items */}
@@ -70,24 +89,44 @@ const OrderDetailsPage = () => {
             <h3 className="font-semibold mb-2">Items Ordered</h3>
             <ul>
               {order.items.map((item, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center justify-between mb-2"
-                >
-                  <div className="flex items-center">
+                <li key={idx} className="flex items-center w-full mb-4">
+                  <div className="flex items-center w-3/4">
                     <img
                       src={item.productId.images[0]} // Use product image URL
-                      alt={item.productId.name}
-                      className="w-12 h-12 object-cover rounded"
+                      alt={item.productId.title}
+                      className="w-24 h-24 object-cover rounded"
                     />
-                    <div className="ml-4">
-                      <p className="font-medium">{item.productId.name}</p>
-                      <p className="text-gray-500">Qty: {item.quantity}</p>
+                    <div className="ml-8">
+                      <p className="font-medium">{item.productId.title}</p>
+                      <p className="text-gray-500">Quantity: {item.quantity}</p>
+                      <p className="text-gray-500">
+                        Repayment Plan: {item.repayment_plan} months
+                      </p>
+                      <p className="text-gray-500">
+                        Monthly Installment: Kshs.{" "}
+                        {item.monthly_installment.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-gray-700">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </p>
+                  <div className="w-1/4 text-right">
+                    <p className="text-gray-700 font-semibold">
+                      Total: Kshs.{" "}
+                      {item.total_price.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                    <p className="text-gray-700 font-semibold">
+                      Remaining: Kshs.{" "}
+                      {item.remaining_balance.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -96,7 +135,7 @@ const OrderDetailsPage = () => {
       )}
 
       <Link to={"/my-orders"}>
-        <Button className="mt-14 w-full">Go Back</Button>
+        <Button className="mt-6 w-full">Go Back</Button>
       </Link>
     </div>
   );

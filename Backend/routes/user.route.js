@@ -15,11 +15,12 @@ import {
 } from "../controllers/user.controller.js";
 import upload from "../utils/multer.js";
 import { uploadUserImages } from "../utils/uploadImage.js";
+import { verifyAdmin } from "../utils/verifyAdmin.js";
 
 const router = express.Router();
 
-router.get("/", verifyToken, getAllClients);
-router.get("/get_guarantors", verifyToken, getAllGuarantors);
+router.get("/get_clients", verifyToken, verifyAdmin, getAllClients);
+router.get("/get_guarantors", verifyToken, verifyAdmin, getAllGuarantors);
 router.get("/:id", verifyToken, getClientById);
 router.get("/get_client/:authId", verifyToken, getClientByAuthId);
 router.get("/get_guarantor/:id", verifyToken, getGuarantorById);

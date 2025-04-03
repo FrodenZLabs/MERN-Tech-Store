@@ -9,10 +9,11 @@ import {
   updateUser,
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
+import { verifyAdmin } from "../utils/verifyAdmin.js";
 
 const router = express.Router();
 
-router.get("/", verifyToken, getAllUsers);
+router.get("/", verifyToken, verifyAdmin, getAllUsers);
 router.get("/:id", verifyToken, getUserById);
 router.post("/signup", signup);
 router.post("/signin", signin);

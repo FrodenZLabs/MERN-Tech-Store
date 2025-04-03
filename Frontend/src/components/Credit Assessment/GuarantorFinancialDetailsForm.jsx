@@ -29,7 +29,7 @@ const GuarantorFinancialDetailsForm = ({ guarantorData, setGuarantorData }) => {
           >
             <option value="">Select Employment Status</option>
             <option value="Employed">Employed</option>
-            <option value="Self-employed">Self-employed</option>
+            <option value="Self-Employed">Self-Employed</option>
             <option value="Unemployed">Unemployed</option>
           </Select>
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { RingLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 import {
   fetchUserPrediction,
   predictRisk,
@@ -146,7 +146,7 @@ const CreditPredictionPage = () => {
       {/* Loading State */}
       {loading ? (
         <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
-          <RingLoader color="#4A90E2" size={100} />
+          <HashLoader color="#ffcb00" size={200} />
         </div>
       ) : (
         <>

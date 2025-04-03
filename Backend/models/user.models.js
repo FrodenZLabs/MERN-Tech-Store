@@ -109,11 +109,7 @@ const guarantorSchema = new mongoose.Schema(
     },
 
     // Guarantor Personal Details
-    firstName: {
-      type: String,
-      required: false,
-    },
-    lastName: {
+    full_name: {
       type: String,
       required: false,
     },

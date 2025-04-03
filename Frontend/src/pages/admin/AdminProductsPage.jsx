@@ -37,7 +37,7 @@ import {
   fetchProductsByID,
   updateProduct,
 } from "../../services/productService";
-import { RingLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 import { toast } from "react-toastify";
 
 const AdminProductsPage = () => {
@@ -77,19 +77,25 @@ const AdminProductsPage = () => {
     setLoading(false);
   };
 
+  // Handle change of search input
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
   // Fetch products from the backend API
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [searchTerm]);
 
   return (
     <NavbarSidebar isFooter={false}>
       {/* Full-screen loader */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
-          <RingLoader color="#4A90E2" size={100} />
+          <HashLoader color="#ffcb00" size={200} />
         </div>
       )}
+
       <div className="block items-center justify-between border-b border-gray-200 bg-white p-4 sm:flex">
         <div className="mb-1 w-full">
           <div className="mb-4">
@@ -107,7 +113,20 @@ const AdminProductsPage = () => {
             </h1>
           </div>
           <div className="block items-center sm:flex">
-            <SearchForProducts />
+            <form className="lg:pr-3">
+              <Label htmlFor="users-search" className="sr-only">
+                Search
+              </Label>
+              <div className="relative mt-1 lg:w-64 xl:w-96">
+                <TextInput
+                  id="users-search"
+                  name="users-search"
+                  placeholder="Search for departments"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </form>
             <div className="hidden space-x-1 border-l border-gray-100 pl-2 md:flex">
               <a
                 href="#"
@@ -161,9 +180,17 @@ const AdminProductsPage = () => {
   );
 };
 
-const SearchForProducts = () => {
+const SearchForProducts = ({ setSearchTerm }) => {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    // Pass the trimmed search term to the parent component
+    setSearchTerm(inputValue.trim());
+  };
+
   return (
-    <form action="#" className="mb-4 sm:mb-0 sm:pr-3">
+    <form nSubmit={handleSearch} className="mb-4 sm:mb-0 sm:pr-3">
       <Label htmlFor="products-search" className="sr-only">
         Search
       </Label>
@@ -172,6 +199,8 @@ const SearchForProducts = () => {
           id="products-search"
           name="products-search"
           placeholder="Search for products"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
         />
       </div>
     </form>

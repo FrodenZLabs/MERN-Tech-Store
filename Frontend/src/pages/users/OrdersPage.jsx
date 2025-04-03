@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { RingLoader } from "react-spinners";
+import { HashLoader } from "react-spinners";
 import { fetchOrdersByUserID } from "../../services/orderService";
 import { BsXCircle } from "react-icons/bs";
 
@@ -44,7 +44,7 @@ const OrdersPage = () => {
       {/* Full-screen loader */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
-          <RingLoader color="#4A90E2" size={100} />
+          <HashLoader color="#ffcb00" size={200} />
         </div>
       )}
 
@@ -106,8 +106,12 @@ const OrdersPage = () => {
                           </p>
                         </div>
                       </div>
-                      <p className="text-gray-700">
-                        Kshs. {(item.base_price * item.quantity).toFixed(2)}
+                      <p className="text-gray-700 font-semibold">
+                        Kshs.{" "}
+                        {item.total_price.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </p>
                     </li>
                   ))}

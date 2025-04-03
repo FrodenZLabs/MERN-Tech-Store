@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   HiChevronLeft,
   HiChevronRight,
@@ -31,10 +31,43 @@ import {
   TextInput,
 } from "flowbite-react";
 import NavbarSidebar from "../../layouts/NavbarSidebar";
+import {
+  fetchAllGuarantorDetails,
+  fetchGuarantorDetailsByID,
+} from "../../services/userService";
+import { HashLoader } from "react-spinners";
 
 const AdminGuarantorsPage = () => {
+  const [guarantorDetails, setGuarantorDetails] = useState([]); // State to store credit risks
+  const [loading, setLoading] = useState(true); // State to track loading
+
+  // Fetch credit risks data from the backend
+  const fetchGuarantorsData = async () => {
+    try {
+      const response = await fetchAllGuarantorDetails();
+
+      setGuarantorDetails(response.guarantor);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching credit risks:", err);
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchGuarantorsData();
+  }, []);
+
   return (
     <NavbarSidebar isFooter={false}>
+      {/* Full-screen loader */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
+          <HashLoader color="#ffcb00" size={200} />
+        </div>
+      )}
+
       <div className="block items-center justify-between border-b border-gray-200 bg-white p-4 sm:flex">
         <div className="mb-1 w-full">
           <div className="mb-4">
@@ -106,7 +139,7 @@ const AdminGuarantorsPage = () => {
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
-              <AllUsersTable />
+              <AllGuarantorsTable guarantorDetails={guarantorDetails} />
             </div>
           </div>
         </div>
@@ -203,221 +236,276 @@ const AddUserModal = () => {
   );
 };
 
-const AllUsersTable = () => {
+const AllGuarantorsTable = ({ guarantorDetails }) => {
   return (
     <Table className="min-w-full divide-y divide-gray-200">
-      <TableHead className="bg-gray-100">
-        <TableHeadCell>
-          <Label htmlFor="select-all" className="sr-only">
-            Select all
-          </Label>
-          <Checkbox id="select-all" name="select-all" />
-        </TableHeadCell>
-        <TableHeadCell>Name</TableHeadCell>
-        <TableHeadCell>Position</TableHeadCell>
-        <TableHeadCell>Country</TableHeadCell>
-        <TableHeadCell>Status</TableHeadCell>
+      <TableHead className="bg-gray-100 text-center">
+        <TableHeadCell>Guarantor Name</TableHeadCell>
+        <TableHeadCell>Phone Number</TableHeadCell>
+        <TableHeadCell>ID Number</TableHeadCell>
+        <TableHeadCell>KRA Pin</TableHeadCell>
+        <TableHeadCell>Gender</TableHeadCell>
+        <TableHeadCell>Relationship To student</TableHeadCell>
         <TableHeadCell>Actions</TableHeadCell>
       </TableHead>
       <TableBody className="divide-y divide-gray-200 bg-white">
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <div className="flex items-center">
-              <Checkbox aria-describedby="checkbox-1" id="checkbox-1" />
-              <label htmlFor="checkbox-1" className="sr-only">
-                checkbox
-              </label>
-            </div>
-          </TableCell>
-          <TableCell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-            <img
-              className="h-10 w-10 rounded-full"
-              src="../../images/users/neil-sims.png"
-              alt="Neil Sims avatar"
-            />
-            <div className="text-sm font-normal text-gray-500">
-              <div className="text-base font-semibold text-gray-900">
-                Neil Sims
+        {guarantorDetails.map((guarantor, index) => (
+          <TableRow key={index} className="hover:bg-gray-100 text-center">
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {guarantor.full_name}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {guarantor.phone_no}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {guarantor.id_number}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {guarantor.kra_pin}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {guarantor.gender}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {guarantor.relationship_to_student}
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-x-3 whitespace-nowrap">
+                <ViewGuarantorModal guarantorId={guarantor._id} />
+                <DeleteUserModal />
               </div>
-              <div className="text-sm font-normal text-gray-500">
-                neil.sims@flowbite.com
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Front-end developer
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            United States
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-normal text-gray-900">
-            <div className="flex items-center">
-              <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400"></div>{" "}
-              Active
-            </div>
-          </TableCell>
-          <TableCell>
-            <div className="flex items-center gap-x-3 whitespace-nowrap">
-              <EditUserModal />
-              <DeleteUserModal />
-            </div>
-          </TableCell>
-        </TableRow>
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <div className="flex items-center">
-              <input
-                id="checkbox-2"
-                aria-describedby="checkbox-1"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 bg-gray-50 focus:ring-4 focus:ring-primary-300"
-              />
-              <label htmlFor="checkbox-2" className="sr-only">
-                checkbox
-              </label>
-            </div>
-          </TableCell>
-          <TableCell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-            <img
-              className="h-10 w-10 rounded-full"
-              src="../../images/users/roberta-casas.png"
-              alt="Roberta Casas avatar"
-            />
-            <div className="text-sm font-normal text-gray-500">
-              <div className="text-base font-semibold text-gray-900">
-                Roberta Casas
-              </div>
-              <div className="text-sm font-normal text-gray-500">
-                roberta.casas@flowbite.com
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Designer
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Spain
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-normal text-gray-900">
-            <div className="flex items-center">
-              <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400"></div>{" "}
-              Active
-            </div>
-          </TableCell>
-          <TableCell>
-            <div className="flex items-center gap-x-3 whitespace-nowrap">
-              <EditUserModal />
-              <DeleteUserModal />
-            </div>
-          </TableCell>
-        </TableRow>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );
 };
 
-const EditUserModal = () => {
+const ViewGuarantorModal = ({ guarantorId }) => {
   const [isOpen, setOpen] = useState(false);
+  const [guarantorData, setGuarantorData] = useState(null); // Initialize as null
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && guarantorId) {
+      fetchGuarantorData(guarantorId); // Fetch data only when modal is open and ID is available
+    }
+  }, [isOpen, guarantorId]);
+
+  const fetchGuarantorData = async (guarantorId) => {
+    setLoading(true);
+    try {
+      const response = await fetchGuarantorDetailsByID(guarantorId);
+      setGuarantorData(response.guarantor);
+    } catch (err) {
+      console.error("Failed to fetch credit data.", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
-      <Button color="green" onClick={() => setOpen(true)}>
+      <Button color="blue" onClick={() => setOpen(true)}>
         <div className="flex items-center gap-x-2">
           <HiOutlinePencilAlt className="text-lg" />
-          Edit user
+          View guarantor
         </div>
       </Button>
       <Modal onClose={() => setOpen(false)} show={isOpen}>
         <ModalHeader className="border-b border-gray-200 !p-6">
-          <strong>Edit user</strong>
+          <strong>View Guarantor</strong>
         </ModalHeader>
         <ModalBody>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="firstName">First name</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="firstName"
-                  name="firstName"
-                  placeholder="Bonnie"
-                />
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+          ) : !guarantorData ? (
+            <p className="text-red-500 text-center">
+              No guarantor data available.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              {/* Full Name */}
+              <div>
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="fullName"
+                    name="fullName"
+                    value={guarantorData?.full_name || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="phone"
+                    name="phone"
+                    value={guarantorData?.phone_no || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* ID Number */}
+              <div>
+                <Label htmlFor="idNumber">ID Number</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="idNumber"
+                    name="idNumber"
+                    value={guarantorData?.id_number || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Gender */}
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="gender"
+                    name="gender"
+                    value={guarantorData?.gender || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* KRA PIN */}
+              <div>
+                <Label htmlFor="kraPin">KRA PIN</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="kraPin"
+                    name="kraPin"
+                    value={guarantorData?.kra_pin || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Date of Birth */}
+              <div>
+                <Label htmlFor="dob">Date of Birth</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="dob"
+                    name="dob"
+                    value={
+                      guarantorData?.date_of_birth
+                        ? new Date(
+                            guarantorData.date_of_birth
+                          ).toLocaleDateString()
+                        : "N/A"
+                    }
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Marital Status */}
+              <div>
+                <Label htmlFor="maritalStatus">Marital Status</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="maritalStatus"
+                    name="maritalStatus"
+                    value={guarantorData?.marital_status || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Number of Dependents */}
+              <div>
+                <Label htmlFor="dependants">Number of Dependents</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="dependants"
+                    name="dependants"
+                    value={guarantorData?.no_of_dependants || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Education Level */}
+              <div>
+                <Label htmlFor="educationLevel">Education Level</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="educationLevel"
+                    name="educationLevel"
+                    value={guarantorData?.education_level || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Relationship to Student */}
+              <div>
+                <Label htmlFor="relationship">Relationship to Student</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="relationship"
+                    name="relationship"
+                    value={guarantorData?.relationship_to_student || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              {/* Client Details */}
+              <div>
+                <Label htmlFor="clientFirstName">Client First Name</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="clientFirstName"
+                    name="clientFirstName"
+                    value={guarantorData?.authId?.clientId?.first_name || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="clientLastName">Client Last Name</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="clientLastName"
+                    name="clientLastName"
+                    value={guarantorData?.authId?.clientId?.last_name || "N/A"}
+                    readOnly
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="clientIdEmail">Client Email</Label>
+                <div className="mt-1">
+                  <TextInput
+                    id="clientIdEmail"
+                    name="clientIdEmail"
+                    value={guarantorData?.authId?.email || "N/A"}
+                    readOnly
+                  />
+                </div>
               </div>
             </div>
-            <div>
-              <Label htmlFor="lastName">Last name</Label>
-              <div className="mt-1">
-                <TextInput id="lastName" name="lastName" placeholder="Green" />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="email"
-                  name="email"
-                  placeholder="example@company.com"
-                  type="email"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone number</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="phone"
-                  name="phone"
-                  placeholder="e.g., +(12)3456 789"
-                  type="tel"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="department">Department</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="department"
-                  name="department"
-                  placeholder="Development"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="company">Company</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="company"
-                  name="company"
-                  placeholder="Somewhere"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="passwordCurrent">Current password</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="passwordCurrent"
-                  name="passwordCurrent"
-                  placeholder="••••••••"
-                  type="password"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="passwordNew">New password</Label>
-              <div className="mt-1">
-                <TextInput
-                  id="passwordNew"
-                  name="passwordNew"
-                  placeholder="••••••••"
-                  type="password"
-                />
-              </div>
-            </div>
-          </div>
+          )}
         </ModalBody>
         <ModalFooter>
-          <Button color="green" onClick={() => setOpen(false)}>
-            Save all
+          <Button color="red" onClick={() => setOpen(false)}>
+            Close
           </Button>
         </ModalFooter>
       </Modal>

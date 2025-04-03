@@ -2,13 +2,12 @@ import {
   Breadcrumb,
   BreadcrumbItem,
   Button,
-  Checkbox,
-  FileInput,
   Label,
   Modal,
   ModalBody,
   ModalFooter,
   ModalHeader,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -26,14 +25,45 @@ import {
   HiOutlineExclamationCircle,
   HiPencilAlt,
   HiTrash,
-  HiUpload,
 } from "react-icons/hi";
-import { useState } from "react";
-import { FaPlus } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import {
+  fetchAllCreditRiskByID,
+  fetchAllCreditRisks,
+} from "../../services/userService";
+import { FadeLoader, HashLoader } from "react-spinners";
 
 const AdminCreditRisksPage = () => {
+  const [creditRisks, setCreditRisks] = useState([]); // State to store credit risks
+  const [loading, setLoading] = useState(true); // State to track loading
+
+  // Fetch credit risks data from the backend
+  const fetchCreditRisksData = async () => {
+    try {
+      const response = await fetchAllCreditRisks();
+
+      setCreditRisks(response.creditRisks);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching credit risks:", err);
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchCreditRisksData();
+  }, []);
+
   return (
     <NavbarSidebar isFooter={false}>
+      {/* Full-screen loader */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
+          <HashLoader color="#ffcb00" size={200} />
+        </div>
+      )}
+
       <div className="block items-center justify-between border-b border-gray-200 bg-white p-4 sm:flex">
         <div className="mb-1 w-full">
           <div className="mb-4">
@@ -51,7 +81,7 @@ const AdminCreditRisksPage = () => {
             </h1>
           </div>
           <div className="block items-center sm:flex">
-            <SearchForProducts />
+            <SearchForCredits />
             <div className="hidden space-x-1 border-l border-gray-100 pl-2 md:flex">
               <a
                 href="#"
@@ -82,9 +112,6 @@ const AdminCreditRisksPage = () => {
                 <HiDotsVertical className="text-2xl" />
               </a>
             </div>
-            <div className="flex w-full items-center sm:justify-end">
-              <AddProductModal />
-            </div>
           </div>
         </div>
       </div>
@@ -92,7 +119,7 @@ const AdminCreditRisksPage = () => {
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
-              <ProductsTable />
+              <CreditsTable creditRisks={creditRisks} />
             </div>
           </div>
         </div>
@@ -101,204 +128,202 @@ const AdminCreditRisksPage = () => {
   );
 };
 
-const SearchForProducts = () => {
+const SearchForCredits = () => {
   return (
     <form action="#" className="mb-4 sm:mb-0 sm:pr-3">
-      <Label htmlFor="products-search" className="sr-only">
+      <Label htmlFor="credit-search" className="sr-only">
         Search
       </Label>
       <div className="relative mt-1 lg:w-64 xl:w-96">
         <TextInput
-          id="products-search"
-          name="products-search"
-          placeholder="Search for products"
+          id="credit-search"
+          name="credit-search"
+          placeholder="Search for credit risk scores"
         />
       </div>
     </form>
   );
 };
 
-const AddProductModal = () => {
+const ViewCreditModal = ({ creditRiskId, getRiskLevel }) => {
   const [isOpen, setOpen] = useState(false);
-  return (
-    <>
-      <Button color="purple" onClick={() => setOpen(!isOpen)}>
-        <FaPlus className="mr-3 text-sm" />
-        Add product
-      </Button>
-      <Modal onClose={() => setOpen(false)} show={isOpen}>
-        <ModalHeader className="border-b border-gray-200 !p-6">
-          <strong>Add Product</strong>
-        </ModalHeader>
-        <ModalBody>
-          <form action="">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div>
-                <Label htmlFor="productName">Product Name</Label>
-                <TextInput
-                  id="productName"
-                  name="productName"
-                  placeholder="Apple iMac 27"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <TextInput
-                  id="category"
-                  name="category"
-                  placeholder="Electronics"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="brand">Brand</Label>
-                <TextInput
-                  id="brand"
-                  name="brand"
-                  placeholder="Apple"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="price">Price</Label>
-                <TextInput
-                  id="price"
-                  name="price"
-                  placeholder="Kshs. 5,200"
-                  className="mt-1"
-                />
-              </div>
-              <div className="lg:col-span-2">
-                <Label htmlFor="productDetails">Product Details</Label>
-                <TextInput
-                  id="productDetails"
-                  name="productDetails"
-                  placeholder="Enter product details"
-                  className="mt-1"
-                  rows={6}
-                />
-              </div>
-              <div className="lg:col-span-2">
-                <div className="flex w-full items-center justify-center">
-                  <Label
-                    htmlFor="dropzone-file"
-                    className="flex h-32 w-full cursor-pointer flex-col rounded border-2 border-dashed border-gray-300 hover:bg-gray-50"
-                  >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <HiUpload className="text-4xl text-gray-300" />
-                      <p className="py-1 text-sm text-gray-600">
-                        <span className="font-semibold">Click to upload</span>{" "}
-                        or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        SVG, PNG, JPG or GIF (MAX. 800x400px)
-                      </p>
-                    </div>
-                    <FileInput id="dropzone-file" className="hidden" />
-                  </Label>
-                </div>
-              </div>
-            </div>
-          </form>
-        </ModalBody>
-        <ModalFooter>
-          <Button color="purple" onClick={() => setOpen(false)}>
-            Add product
-          </Button>
-        </ModalFooter>
-      </Modal>
-    </>
-  );
-};
+  const [creditData, setCreditData] = useState(null); // Initialize as null
+  const [loading, setLoading] = useState(false);
 
-const EditProductModal = () => {
-  const [isOpen, setOpen] = useState(false);
+  useEffect(() => {
+    if (isOpen && creditRiskId) {
+      fetchCreditData(creditRiskId); // Fetch data only when modal is open and ID is available
+    }
+  }, [isOpen, creditRiskId]);
+
+  const fetchCreditData = async (creditRiskId) => {
+    setLoading(true);
+    try {
+      const response = await fetchAllCreditRiskByID(creditRiskId);
+      setCreditData(response.creditRisk); // Assuming single credit risk per user
+    } catch (err) {
+      console.error("Failed to fetch credit data.", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
-      <Button color="green" onClick={() => setOpen(!isOpen)}>
+      <Button color="blue" onClick={() => setOpen(!isOpen)}>
         <HiPencilAlt className="mr-3 text-lg" />
-        Edit item
+        View item
       </Button>
       <Modal onClose={() => setOpen(false)} show={isOpen}>
         <ModalHeader className="border-b border-gray-200 !p-6">
-          <strong>Edit Product</strong>
+          <strong>View Credit Risk Scores</strong>
         </ModalHeader>
         <ModalBody>
-          <form action="">
+          {loading ? (
+            <div className="flex justify-center items-center">
+              <FadeLoader color="#ffcb00" size={200} />
+            </div>
+          ) : !creditData ? (
+            <p className="text-center text-red-500">No data available.</p>
+          ) : (
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* Personal Information */}
               <div>
-                <Label htmlFor="productName">Product Name</Label>
+                <Label>Full Name</Label>
                 <TextInput
-                  id="productName"
-                  name="productName"
-                  placeholder="Apple iMac 27"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <TextInput
-                  id="category"
-                  name="category"
-                  placeholder="Electronics"
-                  className="mt-1"
+                  value={
+                    creditData?.authId?.clientId?.first_name &&
+                    creditData?.authId?.clientId?.last_name
+                      ? `${creditData.authId.clientId.first_name} ${creditData.authId.clientId.last_name}`
+                      : "N/A"
+                  }
+                  readOnly
                 />
               </div>
               <div>
-                <Label htmlFor="brand">Brand</Label>
+                <Label>ID Number</Label>
                 <TextInput
-                  id="brand"
-                  name="brand"
-                  placeholder="Apple"
-                  className="mt-1"
+                  value={creditData?.authId?.clientId?.id_number || "N/A"}
+                  readOnly
                 />
               </div>
               <div>
-                <Label htmlFor="price">Price</Label>
+                <Label>Phone Number</Label>
                 <TextInput
-                  id="price"
-                  name="price"
-                  placeholder="Kshs. 5,200"
-                  className="mt-1"
+                  value={creditData?.authId?.clientId?.phone_no || "N/A"}
+                  readOnly
                 />
               </div>
-              <div className="lg:col-span-2">
-                <Label htmlFor="productDetails">Product Details</Label>
+              <div>
+                <Label>Marital Status</Label>
                 <TextInput
-                  id="productDetails"
-                  name="productDetails"
-                  placeholder="Enter product details"
-                  className="mt-1"
-                  rows={6}
+                  value={creditData?.marital_status || "N/A"}
+                  readOnly
                 />
               </div>
-              <div className="lg:col-span-2">
-                <div className="flex w-full items-center justify-center">
-                  <Label
-                    htmlFor="dropzone-file"
-                    className="flex h-32 w-full cursor-pointer flex-col rounded border-2 border-dashed border-gray-300 hover:bg-gray-50"
-                  >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <HiUpload className="text-4xl text-gray-300" />
-                      <p className="py-1 text-sm text-gray-600">
-                        <span className="font-semibold">Upload a file</span> or
-                        drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        SVG, PNG, JPG or GIF (MAX. 800x400px)
-                      </p>
-                    </div>
-                    <FileInput id="dropzone-file" className="hidden" />
-                  </Label>
-                </div>
+              <div>
+                <Label>Education Level</Label>
+                <TextInput
+                  value={creditData?.education_level || "N/A"}
+                  readOnly
+                />
+              </div>
+
+              {/* Financial Details */}
+              <div>
+                <Label>Income (KES)</Label>
+                <TextInput
+                  value={creditData?.income_in_kes || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Additional Income (KES)</Label>
+                <TextInput
+                  value={creditData?.additional_income || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Employment Status</Label>
+                <TextInput
+                  value={creditData?.employment_status || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Employment Length (Years)</Label>
+                <TextInput
+                  value={creditData?.employment_length || "N/A"}
+                  readOnly
+                />
+              </div>
+
+              {/* Guarantor Details */}
+              <div>
+                <Label>Guarantor Name</Label>
+                <TextInput
+                  value={creditData?.authId?.guarantorId?.full_name || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Guarantor Credit Score</Label>
+                <TextInput
+                  value={creditData?.guarantor_credit_score || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Guarantor Relationship</Label>
+                <TextInput
+                  value={
+                    creditData?.authId?.guarantorId?.relationship_to_student ||
+                    "N/A"
+                  }
+                  readOnly
+                />
+              </div>
+
+              {/* Credit Risk Details */}
+              <div>
+                <Label>Risk Score</Label>
+                <TextInput
+                  value={getRiskLevel(creditData?.risk_score) || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Existing Loans</Label>
+                <TextInput
+                  value={creditData?.existing_loans ? "Yes" : "No"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Outstanding Loan Amount</Label>
+                <TextInput
+                  value={`Kshs. ${
+                    creditData?.outstanding_loan_amount || "N/A"
+                  }`}
+                  readOnly
+                />
+              </div>
+              <div>
+                <Label>Monthly Repayment Amount</Label>
+                <TextInput
+                  value={`Kshs. ${
+                    creditData?.monthly_repayment_amount || "N/A"
+                  }`}
+                  readOnly
+                />
               </div>
             </div>
-          </form>
+          )}
         </ModalBody>
         <ModalFooter>
-          <Button color="green" onClick={() => setOpen(false)}>
-            Save all
+          <Button color="red" onClick={() => setOpen(false)}>
+            Close
           </Button>
         </ModalFooter>
       </Modal>
@@ -340,133 +365,60 @@ const DeleteProductModal = () => {
   );
 };
 
-const ProductsTable = () => {
+const CreditsTable = ({ creditRisks }) => {
+  // Function to map risk score to risk level
+  const getRiskLevel = (riskScore) => {
+    switch (riskScore) {
+      case 0:
+        return "Low";
+      case 1:
+        return "Medium";
+      case 2:
+        return "High";
+      default:
+        return "Unknown"; // Handle unexpected values gracefully
+    }
+  };
+
   return (
     <Table className="min-w-full divide-y divide-gray-200">
-      <TableHead className="bg-gray-100">
-        <TableHeadCell>
-          <span className="sr-only">Toggle selected</span>
-          <Checkbox />
-        </TableHeadCell>
-        <TableHeadCell>Product Name</TableHeadCell>
-        <TableHeadCell>Technology</TableHeadCell>
-        <TableHeadCell>ID</TableHeadCell>
-        <TableHeadCell>Price</TableHeadCell>
+      <TableHead className="bg-gray-100 text-center">
+        <TableHeadCell>Client Name</TableHeadCell>
+        <TableHeadCell>Guarantor Name</TableHeadCell>
+        <TableHeadCell>Relationship To Student</TableHeadCell>
+        <TableHeadCell>Credit Score</TableHeadCell>
+        <TableHeadCell>Credit Risk</TableHeadCell>
         <TableHeadCell>Actions</TableHeadCell>
       </TableHead>
       <TableBody className="divide-y divide-gray-200 bg-white">
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <Checkbox />
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-sm font-normal text-gray-500">
-            <div className="text-base font-semibold text-gray-900">
-              Education Dashboard
-            </div>
-            <div className="text-sm font-normal text-gray-500">
-              Html templates
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Angular
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 7,500
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 1000
-          </TableCell>
-          <TableCell className="space-x-2 whitespace-nowrap p-4">
-            <div className="flex items-center gap-x-3">
-              <EditProductModal />
-              <DeleteProductModal />
-            </div>
-          </TableCell>
-        </TableRow>
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <Checkbox />
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-sm font-normal text-gray-500">
-            <div className="text-base font-semibold text-gray-900">
-              Education Dashboard
-            </div>
-            <div className="text-sm font-normal text-gray-500">
-              Html templates
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Angular
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 7,500
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 1000
-          </TableCell>
-          <TableCell className="space-x-2 whitespace-nowrap p-4">
-            <div className="flex items-center gap-x-3">
-              <EditProductModal />
-              <DeleteProductModal />
-            </div>
-          </TableCell>
-        </TableRow>
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <Checkbox />
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-sm font-normal text-gray-500">
-            <div className="text-base font-semibold text-gray-900">
-              Education Dashboard
-            </div>
-            <div className="text-sm font-normal text-gray-500">
-              Html templates
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Angular
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 7,500
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 1000
-          </TableCell>
-          <TableCell className="space-x-2 whitespace-nowrap p-4">
-            <div className="flex items-center gap-x-3">
-              <EditProductModal />
-              <DeleteProductModal />
-            </div>
-          </TableCell>
-        </TableRow>
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <Checkbox />
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-sm font-normal text-gray-500">
-            <div className="text-base font-semibold text-gray-900">
-              Education Dashboard
-            </div>
-            <div className="text-sm font-normal text-gray-500">
-              Html templates
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Angular
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 7,500
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Kshs. 1000
-          </TableCell>
-          <TableCell className="space-x-2 whitespace-nowrap p-4">
-            <div className="flex items-center gap-x-3">
-              <EditProductModal />
-              <DeleteProductModal />
-            </div>
-          </TableCell>
-        </TableRow>
+        {creditRisks.map((risk, index) => (
+          <TableRow key={index} className="hover:bg-gray-100 text-center">
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {risk.authId.clientId.first_name} {risk.authId.clientId.last_name}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {risk.authId.guarantorId.full_name}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {risk.authId.guarantorId.relationship_to_student}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {risk.guarantor_credit_score}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {getRiskLevel(risk.risk_score)}
+            </TableCell>
+            <TableCell className="space-x-2 whitespace-nowrap p-4">
+              <div className="flex items-center gap-x-3">
+                <ViewCreditModal
+                  creditRiskId={risk._id}
+                  getRiskLevel={getRiskLevel}
+                />
+                <DeleteProductModal />
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );

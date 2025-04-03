@@ -117,15 +117,6 @@ export const SidebarMenu = () => {
                   Payments
                 </SidebarItem>
                 <SidebarItem
-                  href="/admin/credit-scores"
-                  icon={MdOutlineCreditScore}
-                  className={
-                    "/admin/credit-scores" === currentPage ? "bg-gray-100" : ""
-                  }
-                >
-                  Credit Scores
-                </SidebarItem>
-                <SidebarItem
                   href="/admin/credit-risks"
                   icon={GiCash}
                   className={

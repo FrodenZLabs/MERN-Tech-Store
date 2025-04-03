@@ -21,6 +21,14 @@ const authSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    clientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Client",
+    },
+    guarantorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guarantor",
+    },
   },
   { timestamps: true } // Adds createdAt and updatedAt fields
 );

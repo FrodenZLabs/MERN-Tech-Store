@@ -174,3 +174,79 @@ export const fetchDynamicPrice = async (productId, durationMonths) => {
     throw error.response?.data?.message || "Failed to fetch dynamic price.";
   }
 };
+
+export const fetchAllCreditRisks = async () => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/prediction/admin/credit-risks`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Failed to fetch all credit risks.";
+  }
+};
+
+export const fetchAllCreditRiskByID = async (creditRiskId) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/prediction/admin/credit-risks/${creditRiskId}`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || "Failed to fetch all credit risks.";
+  }
+};
+
+export const fetchAllClientDetails = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/user/get_clients`, {
+      withCredentials: true,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data?.message || "Failed to fetch all client details."
+    );
+  }
+};
+
+export const fetchAllGuarantorDetails = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/user/get_guarantors`, {
+      withCredentials: true,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data?.message || "Failed to fetch all guarantor details."
+    );
+  }
+};
+
+export const fetchGuarantorDetailsByID = async (guarantorId) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/user/get_guarantor/${guarantorId}`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data?.message ||
+      "Failed to fetch all guarantor details by ID."
+    );
+  }
+};

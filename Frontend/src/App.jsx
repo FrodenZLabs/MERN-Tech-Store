@@ -5,7 +5,6 @@ import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminGuarantorsPage from "./pages/admin/AdminGuarantorsPage";
 import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
-import AdminCreditScoresPage from "./pages/admin/AdminCreditScores";
 import AdminCreditRisksPage from "./pages/admin/AdminCreditRisks";
 import AdminProfile from "./pages/admin/AdminProfile";
 import OnlyAdminPrivateRoute from "./components/OnlyAdminPrivateRoute";
@@ -81,10 +80,6 @@ function App() {
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/guarantors" element={<AdminGuarantorsPage />} />
             <Route path="/admin/payments" element={<AdminPaymentsPage />} />
-            <Route
-              path="/admin/credit-scores"
-              element={<AdminCreditScoresPage />}
-            />
             <Route
               path="/admin/credit-risks"
               element={<AdminCreditRisksPage />}

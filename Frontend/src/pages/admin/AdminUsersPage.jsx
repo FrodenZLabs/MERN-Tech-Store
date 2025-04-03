@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   HiChevronLeft,
   HiChevronRight,
@@ -31,10 +31,40 @@ import {
   TextInput,
 } from "flowbite-react";
 import NavbarSidebar from "../../layouts/NavbarSidebar";
+import { fetchAllClientDetails } from "../../services/userService";
+import { HashLoader } from "react-spinners";
 
 const AdminUsersPage = () => {
+  const [clientDetails, setClientDetails] = useState([]); // State to store credit risks
+  const [loading, setLoading] = useState(true); // State to track loading
+
+  // Fetch credit risks data from the backend
+  const fetchClientsData = async () => {
+    try {
+      const response = await fetchAllClientDetails();
+
+      setClientDetails(response.clients);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching credit risks:", err);
+      setLoading(false);
+    }
+  };
+
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchClientsData();
+  }, []);
+
   return (
     <NavbarSidebar isFooter={false}>
+      {/* Full-screen loader */}
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
+          <HashLoader color="#ffcb00" size={200} />
+        </div>
+      )}
+
       <div className="block items-center justify-between border-b border-gray-200 bg-white p-4 sm:flex">
         <div className="mb-1 w-full">
           <div className="mb-4">
@@ -106,7 +136,7 @@ const AdminUsersPage = () => {
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
-              <AllUsersTable />
+              <AllUsersTable clientDetails={clientDetails} />
             </div>
           </div>
         </div>
@@ -203,114 +233,59 @@ const AddUserModal = () => {
   );
 };
 
-const AllUsersTable = () => {
+const AllUsersTable = ({ clientDetails }) => {
   return (
     <Table className="min-w-full divide-y divide-gray-200">
-      <TableHead className="bg-gray-100">
-        <TableHeadCell>
-          <Label htmlFor="select-all" className="sr-only">
-            Select all
-          </Label>
-          <Checkbox id="select-all" name="select-all" />
-        </TableHeadCell>
-        <TableHeadCell>Name</TableHeadCell>
-        <TableHeadCell>Position</TableHeadCell>
-        <TableHeadCell>Country</TableHeadCell>
-        <TableHeadCell>Status</TableHeadCell>
+      <TableHead className="bg-gray-100 text-center">
+        <TableHeadCell>Auth Details </TableHeadCell>
+        <TableHeadCell>First Name</TableHeadCell>
+        <TableHeadCell>Last Name</TableHeadCell>
+        <TableHeadCell>ID Number</TableHeadCell>
+        <TableHeadCell>Phone Number</TableHeadCell>
+        <TableHeadCell>Gender</TableHeadCell>
         <TableHeadCell>Actions</TableHeadCell>
       </TableHead>
       <TableBody className="divide-y divide-gray-200 bg-white">
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <div className="flex items-center">
-              <Checkbox aria-describedby="checkbox-1" id="checkbox-1" />
-              <label htmlFor="checkbox-1" className="sr-only">
-                checkbox
-              </label>
-            </div>
-          </TableCell>
-          <TableCell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-            <img
-              className="h-10 w-10 rounded-full"
-              src="../../images/users/neil-sims.png"
-              alt="Neil Sims avatar"
-            />
-            <div className="text-sm font-normal text-gray-500">
-              <div className="text-base font-semibold text-gray-900">
-                Neil Sims
-              </div>
-              <div className="text-sm font-normal text-gray-500">
-                neil.sims@flowbite.com
-              </div>
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Front-end developer
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            United States
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-normal text-gray-900">
-            <div className="flex items-center">
-              <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400"></div>{" "}
-              Active
-            </div>
-          </TableCell>
-          <TableCell>
-            <div className="flex items-center gap-x-3 whitespace-nowrap">
-              <EditUserModal />
-              <DeleteUserModal />
-            </div>
-          </TableCell>
-        </TableRow>
-        <TableRow className="hover:bg-gray-100">
-          <TableCell className="w-4 p-4">
-            <div className="flex items-center">
-              <input
-                id="checkbox-2"
-                aria-describedby="checkbox-1"
-                type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 bg-gray-50 focus:ring-4 focus:ring-primary-300"
+        {clientDetails.map((client, index) => (
+          <TableRow key={index} className="hover:bg-gray-100 text-center">
+            <TableCell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
+              <img
+                className="h-10 w-10 rounded-full"
+                src={client.image}
+                alt={client.authId.username}
               />
-              <label htmlFor="checkbox-2" className="sr-only">
-                checkbox
-              </label>
-            </div>
-          </TableCell>
-          <TableCell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-            <img
-              className="h-10 w-10 rounded-full"
-              src="../../images/users/roberta-casas.png"
-              alt="Roberta Casas avatar"
-            />
-            <div className="text-sm font-normal text-gray-500">
-              <div className="text-base font-semibold text-gray-900">
-                Roberta Casas
-              </div>
               <div className="text-sm font-normal text-gray-500">
-                roberta.casas@flowbite.com
+                <div className="text-base font-semibold text-gray-900">
+                  {client.authId.username}
+                </div>
+                <div className="text-sm font-normal text-gray-500">
+                  {client.authId.email}
+                </div>
               </div>
-            </div>
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Designer
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
-            Spain
-          </TableCell>
-          <TableCell className="whitespace-nowrap p-4 text-base font-normal text-gray-900">
-            <div className="flex items-center">
-              <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400"></div>{" "}
-              Active
-            </div>
-          </TableCell>
-          <TableCell>
-            <div className="flex items-center gap-x-3 whitespace-nowrap">
-              <EditUserModal />
-              <DeleteUserModal />
-            </div>
-          </TableCell>
-        </TableRow>
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {client.first_name}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {client.last_name}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {client.id_number}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {client.phone_no}
+            </TableCell>
+            <TableCell className="whitespace-nowrap p-4 text-base font-medium text-gray-900">
+              {client.gender}
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-x-3 whitespace-nowrap">
+                <EditUserModal />
+                <DeleteUserModal />
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );

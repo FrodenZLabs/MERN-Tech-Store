@@ -1,3 +1,4 @@
+import Order from "../models/order.models.js";
 import Payment from "../models/payment.models.js";
 import Product from "../models/products.models.js";
 import { errorHandler } from "../utils/errorHandler.js";
@@ -122,6 +123,30 @@ export const createPayment = async (request, response, next) => {
     // Save the payment record
     await payment.save();
 
+    // Create an associated order record
+    const orderItems = items.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      price: item.price,
+      repayment_plan: item.repayment_plan,
+      total_price: item.price * item.quantity, // Total price for the item
+      remaining_balance: item.price * item.quantity - monthlyInstallment, // Deduct first installment
+      monthly_installment: monthlyInstallment / items.length, // Monthly installment per item
+    }));
+
+    const order = new Order({
+      authId,
+      items: orderItems,
+      totalAmount: total_price,
+      remainingBalance: totalRemainingBalance,
+      status: "Pending", // Default order status
+      paymentStatus: paymentStatus, // Sync payment status
+      paymentId: payment._id, // Reference the payment record
+    });
+
+    // Save the order record
+    await order.save();
+
     response.status(201).json({
       success: true,
       clientSecret: paymentIntent.client_secret,
@@ -131,5 +156,32 @@ export const createPayment = async (request, response, next) => {
   } catch (error) {
     console.error("Error processing payment:", error);
     next(errorHandler(500, "Error processing payment."));
+  }
+};
+
+// Controller to fetch all payments
+export const getAllPayments = async (request, response, next) => {
+  try {
+    // Fetch payments with optional filters
+    const payments = await Payment.find()
+      .populate("authId", "username email role") // Populate user details
+      .populate("items.productId", "title category base_price")
+      .sort({ createdAt: -1 });
+
+    // Handle case where no payments are found
+    if (!payments || payments.length === 0) {
+      return next(
+        errorHandler(404, "No payments found matching the search criteria.")
+      );
+    }
+
+    // Respond with payments and metadata
+    response.status(200).json({
+      success: true,
+      payments,
+    });
+  } catch (error) {
+    console.error("Error fetching payments:", error);
+    next(errorHandler(500, "Failed to fetch payments."));
   }
 };

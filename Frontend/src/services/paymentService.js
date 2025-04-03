@@ -16,3 +16,17 @@ export const createPayments = async (paymentPayload) => {
     throw error.response?.data?.message || "Failed to fetch create payment.";
   }
 };
+
+export const fetchAllPayments = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/payments/get_payments`, {
+      withCredentials: true,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data?.message || "Failed to fetch all guarantor details."
+    );
+  }
+};

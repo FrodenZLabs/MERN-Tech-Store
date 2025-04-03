@@ -75,18 +75,18 @@
 
 # python
 # Copy
-{
-    "utility_bill_payment": "Always on time",
-    "service_deposit_required": "No",
-    "debt_collection_history": "No",
-    "savings_account": "Yes, but limited",
-    "employment_tenure": "6 months to 1 year",
-    "additional_income": "No",
-    "housing_status": "Rent",
-    "eviction_history": "No",
-    "community_savings_group": "Yes, inactive member",
-    "mobile_money_account": "Yes, actively used"
-}
+# {
+#     "utility_bill_payment": "Always on time",
+#     "service_deposit_required": "No",
+#     "debt_collection_history": "No",
+#     "savings_account": "Yes, but limited",
+#     "employment_tenure": "6 months to 1 year",
+#     "additional_income": "No",
+#     "housing_status": "Rent",
+#     "eviction_history": "No",
+#     "community_savings_group": "Yes, inactive member",
+#     "mobile_money_account": "Yes, actively used"
+# }
 # Expected Output:
 
 # Score: ~680–720

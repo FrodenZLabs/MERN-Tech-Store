@@ -2,7 +2,7 @@ import { Button } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { RiDeleteBack2Line } from "react-icons/ri";
 import { Link } from "react-router-dom";
-import { RingLoader } from "react-spinners";
+import { HashLoader, RingLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { BsXCircle } from "react-icons/bs";
@@ -86,7 +86,7 @@ const CartPage = () => {
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black opacity-75 z-50">
-          <RingLoader color="#4A90E2" size={100} />
+          <HashLoader color="#ffcb00" size={200} />
         </div>
       )}
 
